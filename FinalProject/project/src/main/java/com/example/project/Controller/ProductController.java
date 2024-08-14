@@ -1,6 +1,8 @@
 package com.example.project.Controller;
 
 import com.example.project.Client.AuthenticationClient.AuthenticationClient;
+import com.example.project.Client.AuthenticationClient.Dtos.Role;
+import com.example.project.Client.AuthenticationClient.Dtos.SessionStatus;
 import com.example.project.Client.AuthenticationClient.Dtos.ValidateTokenResponseDto;
 import com.example.project.Client.Fakestore.FakeStoreProductDto;
 import com.example.project.Dto.ProductDto;
@@ -22,19 +24,24 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/products")
 public class ProductController {
+
+
     private ProductService productService;
     private AuthenticationClient authenticationClient;
 
-//    public ProductController(ProductService productService){
-//        this.productService = productService;
+    public ProductController(ProductService productService, AuthenticationClient authenticationClient) {
+        this.productService = productService;
+        this.authenticationClient = authenticationClient;
+    }
+
+
+//    @GetMapping()
+//    public List<Product> getAllProductss() {
+//        return productService.getAllProducts();
 //    }
 
 
-    @GetMapping()
-    public List<Product> getAllProductss() {
-        return productService.getAllProducts();
-    }
-
+    //    Make only admin to access product
     @GetMapping()
     public ResponseEntity<List<Product>> getAllProducts(@Nullable @RequestHeader("AUTH_TOKEN") String token,
                                                         @Nullable @RequestHeader("USER_ID") Long userId) {
@@ -43,11 +50,26 @@ public class ProductController {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
-        ValidateTokenResponseDto response = authenticationClient.validate(token,userId);
+        ValidateTokenResponseDto response = authenticationClient.validate(token, userId);
+
+        if (response.getSessionStatus().equals(SessionStatus.INVALID)) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        boolean isAdmin = false;
+
+        for (Role role : response.getUserDto().getRoles()) {
+            if (role.getName().equalsIgnoreCase("admin")) {
+                isAdmin = true;
+            }
+        }
+
+        if (!isAdmin) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
 
         List<Product> products = productService.getAllProducts();
 
-        return new ResponseEntity<>(products,HttpStatus.OK);
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
 

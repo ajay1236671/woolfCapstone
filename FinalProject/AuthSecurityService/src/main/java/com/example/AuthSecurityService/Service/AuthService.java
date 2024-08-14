@@ -25,6 +25,11 @@ public class AuthService {
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private SessionRepository sessionRepository;
 
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository) {
+        this.userRepository = userRepository;
+//        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.sessionRepository = sessionRepository;
+    }
 
     public ResponseEntity<UserDto> login(String emial, String password) throws UserDoesNotExistsException {
 
@@ -85,17 +90,21 @@ public class AuthService {
         return UserDto.from(savedUser);
     }
 
-    public SessionStatus validate(String token, Long userId) {
+    public Optional<UserDto> validate(String token, Long userId) {
         Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_id(token, userId);
         if (sessionOptional.isEmpty()) {
-            return SessionStatus.INVALID;
+            return Optional.empty();
         }
 
         Session session = sessionOptional.get();
         if (!session.getSessionStatus().equals(SessionStatus.ACTIVE)) {
-            return SessionStatus.EXPIRED;
+            return Optional.empty();
         }
 
-        return SessionStatus.ACTIVE;
+        User user = userRepository.findById(userId).get();
+
+        UserDto userDto = UserDto.from(user);
+
+        return Optional.of(userDto);
     }
 }
