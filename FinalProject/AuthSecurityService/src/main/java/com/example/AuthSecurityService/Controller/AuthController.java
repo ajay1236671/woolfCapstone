@@ -1,8 +1,8 @@
 package com.example.AuthSecurityService.Controller;
 
-import com.example.AuthSecurityService.Dto.UserDto;
-import com.example.AuthSecurityService.Dto.ValidateTokenRequestDto;
-import com.example.AuthSecurityService.Dto.ValidateTokenResponseDto;
+import com.example.AuthSecurityService.Dto.*;
+import com.example.AuthSecurityService.Exceptions.UserAlreadyExistsException;
+import com.example.AuthSecurityService.Exceptions.UserDoesNotExistsException;
 import com.example.AuthSecurityService.Model.SessionStatus;
 import com.example.AuthSecurityService.Service.AuthService;
 import org.springframework.http.HttpStatus;
@@ -21,8 +21,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login() {
-        return null;
+    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto requestDto) throws UserDoesNotExistsException {
+        return authService.login(requestDto.getEmail(), requestDto.getPassword());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody LogoutRequestDto logoutRequestDto) {
+        return authService.logout(logoutRequestDto.getToken(), logoutRequestDto.getUserId());
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<UserDto> signup(@RequestBody SignUpRequestDto signUpRequestDto) throws UserAlreadyExistsException {
+        UserDto userDto = authService.signUp(signUpRequestDto.getEmail(), signUpRequestDto.getPassword());
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
 
 

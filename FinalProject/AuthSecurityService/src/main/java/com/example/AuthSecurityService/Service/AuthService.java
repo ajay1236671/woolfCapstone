@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMapAdapter;
 
@@ -22,18 +23,18 @@ import java.util.Optional;
 @Service
 public class AuthService {
     private UserRepository userRepository;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private PasswordEncoder bCryptPasswordEncoder;
     private SessionRepository sessionRepository;
 
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository) {
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, PasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
-//        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.sessionRepository = sessionRepository;
     }
 
-    public ResponseEntity<UserDto> login(String emial, String password) throws UserDoesNotExistsException {
+    public ResponseEntity<UserDto> login(String email, String password) throws UserDoesNotExistsException {
 
-        Optional<User> userOptional = userRepository.findByEmail(emial);
+        Optional<User> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isEmpty()) {
             throw new UserDoesNotExistsException();
